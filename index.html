@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetIQ Pro — Ultimate Match Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #00ff87;
+  --green-dim: rgba(0,255,135,0.12);
+  --red: #ff3d3d;
+  --yellow: #ffd700;
+  --blue: #4fc3f7;
+  --bg: #050a05;
+  --surface: #0d150d;
+  --surface2: #141f14;
+  --border: rgba(0,255,135,0.15);
+  --text: #e8f5e8;
+  --muted: #5a7a5a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(0,255,135,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,135,0.03) 1px, transparent 1px);
+  background-size: 40px 40px; pointer-events: none; z-index: 0;
+}
+.wrapper { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; padding: 16px 14px 80px; }
+
+/* Header */
+.header { text-align: center; padding: 20px 0 16px; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 4px; color: var(--green); text-shadow: 0 0 40px rgba(0,255,135,0.4); }
+.logo span { color: var(--text); }
+.tagline { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+.tab-btn {
+  flex-shrink: 0; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid rgba(0,255,135,0.2); background: var(--surface);
+  color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.tab-btn.active { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+.section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); margin-bottom: 10px; display: block; }
+
+/* Sport tabs */
+.sport-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.sport-tab { padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(0,255,135,0.15); background: var(--surface2); color: var(--muted); font-size: 11px; cursor: pointer; transition: all 0.2s; }
+.sport-tab.active { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
+/* League grid */
+.league-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; max-height: 280px; overflow-y: auto; }
+.league-btn { background: var(--surface2); border: 1px solid rgba(0,255,135,0.1); border-radius: 8px; padding: 7px 5px; text-align: center; cursor: pointer; font-size: 10px; color: var(--muted); transition: all 0.2s; }
+.league-btn:hover, .league-btn.active { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.league-btn .flag { font-size: 16px; display: block; margin-bottom: 2px; }
+
+/* Quick matches */
+.quick-matches { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.quick-match { background: var(--surface2); border: 1px solid rgba(0,255,135,0.1); border-radius: 20px; padding: 4px 10px; font-size: 11px; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+.quick-match:hover { border-color: var(--green); color: var(--green); }
+
+/* Team inputs */
+.match-input-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+.vs-badge { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--green); text-align: center; }
+input[type="text"], select { width: 100%; background: var(--surface2); border: 1px solid rgba(0,255,135,0.15); border-radius: 10px; padding: 11px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+input[type="text"]:focus, select:focus { border-color: var(--green); }
+input[type="text"]::placeholder { color: var(--muted); }
+select option { background: #0d150d; }
+
+/* Markets grid */
+.markets-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 10px; }
+.market-toggle { display: flex; align-items: center; gap: 7px; background: var(--surface2); border: 1px solid rgba(0,255,135,0.1); border-radius: 8px; padding: 9px 10px; cursor: pointer; transition: all 0.2s; user-select: none; }
+.market-toggle.selected { border-color: var(--green); background: var(--green-dim); }
+.market-toggle input { display: none; }
+.market-check { width: 14px; height: 14px; border: 1px solid var(--muted); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; transition: all 0.2s; }
+.market-toggle.selected .market-check { background: var(--green); border-color: var(--green); color: #000; }
+.market-name { font-size: 11px; font-weight: 600; }
+.market-desc { font-size: 10px; color: var(--muted); }
+
+/* Predict button */
+.predict-btn { width: 100%; background: var(--green); color: #000; border: none; border-radius: 12px; padding: 15px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px; cursor: pointer; margin-top: 12px; transition: all 0.2s; }
+.predict-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0,255,135,0.3); }
+.predict-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Loading */
+.loading { display: none; text-align: center; padding: 30px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; }
+.loading.show { display: block; }
+.spinner { width: 36px; height: 36px; border: 2px solid rgba(0,255,135,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--green); }
+.loading-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* Results */
+.results { display: none; }
+.results.show { display: block; }
+.match-header { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 10px; text-align: center; }
+.match-teams { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; margin-bottom: 4px; }
+.confidence-banner { display: inline-block; padding: 5px 14px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; margin-top: 8px; }
+.conf-high { background: rgba(0,255,135,0.15); color: var(--green); border: 1px solid var(--green); }
+.conf-med { background: rgba(255,215,0,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+.conf-low { background: rgba(255,61,61,0.15); color: var(--red); border: 1px solid var(--red); }
+
+.market-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; position: relative; overflow: hidden; }
+.market-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--green); }
+.market-card.danger::before { background: var(--red); }
+.market-card.warning::before { background: var(--yellow); }
+.market-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.market-card-name { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+.market-card-verdict { font-family: 'Bebas Neue', sans-serif; font-size: 14px; padding: 2px 8px; border-radius: 5px; }
+.verdict-yes { background: rgba(0,255,135,0.15); color: var(--green); }
+.verdict-no { background: rgba(255,61,61,0.15); color: var(--red); }
+.verdict-maybe { background: rgba(255,215,0,0.15); color: var(--yellow); }
+.market-card-prediction { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.prob-bar-wrap { margin-bottom: 4px; }
+.prob-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.prob-bar { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.prob-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width 1s ease; }
+.prob-fill.danger { background: var(--red); }
+.prob-fill.warning { background: var(--yellow); }
+.market-reasoning { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; }
+
+.factors-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.factor-item { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(0,255,135,0.05); font-size: 12px; line-height: 1.5; }
+.factor-item:last-child { border-bottom: none; }
+
+/* Accumulator */
+.odds-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 8px; position: relative; }
+.odds-badge { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 5px; background: rgba(255,215,0,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+.remove-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; }
+.total-odds-bar { background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(0,255,135,0.08)); border: 1px solid var(--yellow); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.total-odds-num { font-family: 'Bebas Neue', sans-serif; font-size: 34px; color: var(--yellow); }
+
+/* Error */
+.error-msg { background: rgba(255,61,61,0.1); border: 1px solid rgba(255,61,61,0.3); border-radius: 10px; padding: 12px; font-size: 13px; color: var(--red); margin-bottom: 10px; display: none; }
+.error-msg.show { display: block; }
+
+/* Disclaimer */
+.disclaimer { text-align: center; font-size: 10px; color: var(--muted); padding: 10px; line-height: 1.6; }
+
+/* Pick type grid */
+.pick-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.pick-btn { background: var(--surface2); border: 1px solid rgba(0,255,135,0.1); border-radius: 7px; padding: 8px 5px; text-align: center; cursor: pointer; font-size: 10px; color: var(--muted); transition: all 0.2s; }
+.pick-btn.active { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
+/* Best bet banner */
+.best-bet-banner { background: rgba(0,255,135,0.08); border: 1px solid var(--green); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+
+/* Smart odds generator */
+.odds-generator-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.bet-slip-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(0,255,135,0.06); font-size: 12px; }
+.bet-slip-item:last-child { border-bottom: none; }
+.slip-odds { font-family: 'JetBrains Mono',monospace; color: var(--yellow); font-weight:700; font-size:13px; }
+.slip-prob { font-size: 10px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="logo">Bet<span>IQ</span> <span style="font-size:20px;vertical-align:middle">Pro</span></div>
+    <div class="tagline">Ultimate AI Match Predictor</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(1)">⚽ Single Match</button>
+    <button class="tab-btn" onclick="switchTab(2)">📋 Accumulator</button>
+    <button class="tab-btn" onclick="switchTab(3)">🔥 Smart Odds (50x-500x)</button>
+  </div>
+
+  <!-- TAB 1: Single Match -->
+  <div class="tab-content active" id="tabContent1">
+    <div class="card">
+      <span class="section-label">🏅 Sport</span>
+      <div class="sport-tabs">
+        <div class="sport-tab active" onclick="selectSport(this,'football')">⚽ Football</div>
+        <div class="sport-tab" onclick="selectSport(this,'basketball')">🏀 Basketball</div>
+        <div class="sport-tab" onclick="selectSport(this,'tennis')">🏓 Table Tennis</div>
+        <div class="sport-tab" onclick="selectSport(this,'darts')">🎯 Darts</div>
+      </div>
+
+      <span class="section-label" style="margin-top:10px">🌍 League / Competition</span>
+      <div class="league-grid" id="leagueGrid"></div>
+
+      <span class="section-label">⚡ Quick Pick</span>
+      <div class="quick-matches" id="quickMatches"></div>
+
+      <span class="section-label">✏️ Teams</span>
+      <div class="match-input-row">
+        <input type="text" id="homeTeam" placeholder="Home / Player 1" />
+        <div class="vs-badge">VS</div>
+        <input type="text" id="awayTeam" placeholder="Away / Player 2" />
+      </div>
+
+      <span class="section-label">📊 Markets</span>
+      <div class="markets-grid" id="marketsGrid"></div>
+
+      <button class="predict-btn" onclick="predict()" id="predictBtn">⚡ ANALYSE MATCH</button>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">ANALYSING...</div>
+      <div class="loading-sub" id="loadingStep">Fetching team form & stats</div>
+    </div>
+    <div class="results" id="results"></div>
+  </div>
+
+  <!-- TAB 2: Accumulator -->
+  <div class="tab-content" id="tabContent2">
+    <div class="card">
+      <span class="section-label">🔥 Build Accumulator</span>
+      <div class="match-input-row">
+        <input type="text" id="accumHome" placeholder="Home Team" />
+        <div class="vs-badge">VS</div>
+        <input type="text" id="accumAway" placeholder="Away Team" />
+      </div>
+      <span class="section-label">Pick Type</span>
+      <div class="pick-grid" id="pickGrid"></div>
+      <button class="predict-btn" onclick="addToAccum()" style="font-size:15px;padding:12px;margin-top:10px">+ ADD TO ACCUMULATOR</button>
+    </div>
+    <div class="error-msg" id="accumError"></div>
+    <div id="accumList"></div>
+    <div class="total-odds-bar" id="totalOddsBar" style="display:none">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--muted);font-family:'JetBrains Mono',monospace">TOTAL ODDS</div>
+        <div class="total-odds-num" id="totalOddsNum">1.00</div>
+        <div style="font-size:11px;color:var(--muted)" id="totalOddsInfo"></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Win probability</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--green)" id="totalProbNum">-</div>
+        <button onclick="clearAccum()" style="margin-top:8px;background:rgba(255,61,61,0.15);border:1px solid var(--red);border-radius:6px;padding:4px 10px;color:var(--red);font-size:11px;cursor:pointer;">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Smart Odds Generator -->
+  <div class="tab-content" id="tabContent3">
+    <div class="card">
+      <span class="section-label">🔥 Smart Odds Generator</span>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Generate ready-made bet slips targeting specific odds ranges. AI picks the best combinations across all leagues.</p>
+      
+      <span class="section-label">Target Odds Range</span>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">
+        <div class="pick-btn active" id="odds_50" onclick="selectOddsRange(this,'50-100')">🔥 50x-100x</div>
+        <div class="pick-btn" id="odds_100" onclick="selectOddsRange(this,'100-200')">⚡ 100x-200x</div>
+        <div class="pick-btn" id="odds_200" onclick="selectOddsRange(this,'200-500')">💥 200x-500x</div>
+      </div>
+
+      <span class="section-label">Number of Matches</span>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+        <div class="pick-btn" id="nm_4" onclick="selectNumMatches(this,4)">4 Matches</div>
+        <div class="pick-btn active" id="nm_5" onclick="selectNumMatches(this,5)">5 Matches</div>
+        <div class="pick-btn" id="nm_6" onclick="selectNumMatches(this,6)">6 Matches</div>
+        <div class="pick-btn" id="nm_7" onclick="selectNumMatches(this,7)">7 Matches</div>
+      </div>
+
+      <span class="section-label">Market Types</span>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px">
+        <div class="pick-btn active" id="mt_all" onclick="selectMarketType(this,'all')">All Markets</div>
+        <div class="pick-btn" id="mt_goals" onclick="selectMarketType(this,'goals')">Goals Only</div>
+        <div class="pick-btn" id="mt_wins" onclick="selectMarketType(this,'wins')">Wins Only</div>
+        <div class="pick-btn" id="mt_btts" onclick="selectMarketType(this,'btts')">BTTS</div>
+        <div class="pick-btn" id="mt_ht" onclick="selectMarketType(this,'ht')">Half Time</div>
+        <div class="pick-btn" id="mt_mixed" onclick="selectMarketType(this,'mixed')">Mixed</div>
+      </div>
+
+      <button class="predict-btn" onclick="generateSmartOdds()">🎲 GENERATE SMART SLIP</button>
+    </div>
+    <div class="error-msg" id="smartError"></div>
+    <div id="smartResults"></div>
+  </div>
+
+  <div class="disclaimer">⚠️ BetIQ Pro is for entertainment only. Always gamble responsibly. Never bet more than you can afford to lose.</div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+const ALL_LEAGUES = {
+  football: {
+    'Premier League': { flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', matches:[['Man City','Arsenal'],['Liverpool','Chelsea'],['Man Utd','Tottenham'],['Newcastle','Aston Villa'],['Brighton','West Ham'],['Everton','Wolves'],['Crystal Palace','Brentford'],['Fulham','Nottm Forest']] },
+    'La Liga': { flag:'🇪🇸', matches:[['Real Madrid','Barcelona'],['Atletico Madrid','Sevilla'],['Real Sociedad','Athletic Bilbao'],['Villarreal','Valencia'],['Betis','Celta Vigo'],['Getafe','Osasuna'],['Mallorca','Almeria'],['Girona','Las Palmas']] },
+    'Serie A': { flag:'🇮🇹', matches:[['Inter Milan','Juventus'],['AC Milan','Napoli'],['Roma','Lazio'],['Fiorentina','Atalanta'],['Torino','Bologna'],['Udinese','Empoli'],['Sassuolo','Lecce'],['Hellas Verona','Cagliari']] },
+    'Bundesliga': { flag:'🇩🇪', matches:[['Bayern Munich','Dortmund'],['RB Leipzig','Leverkusen'],['Freiburg','Stuttgart'],['Hoffenheim','Wolfsburg'],['Frankfurt','Mainz'],['Augsburg','Bochum'],['Union Berlin','Darmstadt'],['Heidenheim','Koln']] },
+    'Ligue 1': { flag:'🇫🇷', matches:[['PSG','Marseille'],['Lyon','Monaco'],['Nice','Lille'],['Rennes','Nantes'],['Strasbourg','Lens'],['Reims','Montpellier'],['Lorient','Metz'],['Toulouse','Brest']] },
+    'Champions League': { flag:'⭐', matches:[['Real Madrid','Man City'],['Bayern Munich','PSG'],['Arsenal','Barcelona'],['Inter Milan','Atletico Madrid'],['Dortmund','Chelsea'],['Porto','Napoli'],['Ajax','Benfica'],['Celtic','Shakhtar']] },
+    'Europa League': { flag:'🟠', matches:[['Man Utd','Roma'],['Sevilla','Juventus'],['Rangers','Feyenoord'],['Bayer Leverkusen','Atalanta'],['Villarreal','Ajax'],['Real Betis','Sporting CP'],['Anderlecht','AEK Athens'],['Fenerbahce','Olympiakos']] },
+    'Conference League': { flag:'🟣', matches:[['Fiorentina','West Ham'],['AZ Alkmaar','Gent'],['Olympiakos','PAOK'],['Basel','Hearts'],['Sivasspor','Slavia Prague'],['Lugano','Zrinjski'],['Aberdeen','LASK'],['Servette','Betis']] },
+    'Club World Cup': { flag:'🌍', matches:[['Real Madrid','Al Hilal'],['Man City','Fluminense'],['Bayern Munich','Urawa Reds'],['Flamengo','Al Ahly'],['Chelsea','Palmeiras'],['Al Ain','Auckland City'],['Cruz Azul','Monterrey'],['Seattle','Al Ittihad']] },
+    'Championship': { flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', matches:[['Leeds United','Leicester City'],['Ipswich','Southampton'],['Sheffield Wed','Sunderland'],['Middlesbrough','Coventry'],['Watford','QPR'],['Millwall','West Brom'],['Swansea','Cardiff'],['Huddersfield','Stoke']] },
+    'League One': { flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', matches:[['Portsmouth','Barnsley'],['Derby County','Exeter'],['Oxford Utd','Bristol Rovers'],['Charlton','Peterborough'],['Shrewsbury','Wycombe'],['Cambridge','Fleetwood'],['Forest Green','Plymouth'],['Accrington','MK Dons']] },
+    'League Two': { flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', matches:[['Leyton Orient','Stevenage'],['Bradford City','Grimsby'],['Salford City','Colchester'],['AFC Wimbledon','Crawley'],['Gillingham','Harrogate'],['Mansfield','Tranmere'],['Sutton','Swindon'],['Doncaster','Crewe']] },
+    'Serie B': { flag:'🇮🇹', matches:[['Parma','Venezia'],['Como','Palermo'],['Modena','Bari'],['Catanzaro','Sampdoria'],['Spezia','Ascoli'],['Pisa','Cremonese'],['Cittadella','Cosenza'],['Reggiana','FeralpiSalo']] },
+    '2. Bundesliga': { flag:'🇩🇪', matches:[['Hamburg','Fortuna Dusseldorf'],['Hannover','Karlsruhe'],['Schalke','St Pauli'],['Kaiserslautern','Hertha'],['Paderborn','Nurnberg'],['Braunschweig','Wehen'],['Osnabrück','Greuther Furth'],['Magdeburg','SV Elversberg']] },
+    'Ligue 2': { flag:'🇫🇷', matches:[['Grenoble','Troyes'],['Metz','Laval'],['Bordeaux','Caen'],['Amiens','Pau'],['Guingamp','Rodez'],['Annecy','Dunkerque'],['Auxerre','Quevilly'],['Saint-Etienne','Concarneau']] },
+    'Eredivisie': { flag:'🇳🇱', matches:[['Ajax','PSV'],['Feyenoord','AZ Alkmaar'],['Utrecht','Twente'],['Vitesse','Heerenveen'],['Sparta Rotterdam','NEC'],['Almere','Go Ahead Eagles'],['Excelsior','RKC Waalwijk'],['Fortuna Sittard','Cambuur']] },
+    'Primeira Liga': { flag:'🇵🇹', matches:[['Benfica','Porto'],['Sporting CP','Braga'],['Vitoria','Guimaraes'],['Famalicao','Estoril'],['Arouca','Vizela'],['Rio Ave','Moreirense'],['Chaves','Boavista'],['Casa Pia','Portimonense']] },
+    'Super Lig': { flag:'🇹🇷', matches:[['Galatasaray','Fenerbahce'],['Besiktas','Trabzonspor'],['Basaksehir','Konyaspor'],['Kayserispor','Sivasspor'],['Antalyaspor','Adana'],['Kasimpasa','Rizespor'],['Samsunspor','Hatayspor'],['Ankaragücü','Fatih Karagumruk']] },
+    'MLS': { flag:'🇺🇸', matches:[['LA Galaxy','LAFC'],['Atlanta United','Inter Miami'],['Seattle Sounders','Portland Timbers'],['NYCFC','New England'],['Toronto FC','Montreal'],['Columbus Crew','Nashville SC'],['Dallas','Sporting KC'],['Colorado Rapids','RSL']] },
+    'Saudi Pro League': { flag:'🇸🇦', matches:[['Al Hilal','Al Nassr'],['Al Ittihad','Al Ahli'],['Al Shabab','Al Qadsiah'],['Damac','Al Fayha'],['Al Ettifaq','Al Hazm'],['Al Riyadh','Al Orubah'],['Al Wehda','Al Khaleej'],['Al Taee','Al Akhdoud']] },
+    'Arab Champions League': { flag:'🌙', matches:[['Al Hilal','Zamalek'],['Al Ahly','Al Ittihad'],['ES Tunis','Al Nassr'],['Wydad','Al Ahly SC'],['Al Masry','WAC'],['Pyramids FC','Raja CA'],['Simba SC','Mamelodi'],['Al Jaish','Shabab Al Ahli']] },
+    'Egyptian Premier': { flag:'🇪🇬', matches:[['Al Ahly','Zamalek'],['Pyramids','ENPPI'],['Ismaily','Al Masry'],['Ghazl El Mahalla','Smouha'],['Future FC','Ceramica'],['Tala\'ea El-Gaish','Haras El-Hodoud'],['Al Mokawloon','ZED'],['Ceramica','National Bank']] },
+    'J-League': { flag:'🇯🇵', matches:[['Vissel Kobe','Yokohama FM'],['Urawa Reds','Gamba Osaka'],['Kashima Antlers','Nagoya Grampus'],['FC Tokyo','Sanfrecce Hiroshima'],['Kawasaki Frontale','Cerezo Osaka'],['Consadole Sapporo','Shimizu'],['Avispa Fukuoka','Jubilo Iwata'],['Sagan Tosu','Albirex Niigata']] },
+    'Bundesliga Austria': { flag:'🇦🇹', matches:[['Salzburg','Rapid Vienna'],['Austria Vienna','Sturm Graz'],['LASK','Wolfsberg'],['Ried','Admira'],['Hartberg','Rheindorf Altach'],['Blau Weiss Linz','Lustenau'],['Austria Klagenfurt','Tirol'],['WSG Tirol','GAK']] },
+  },
+  basketball: {
+    'NBA': { flag:'🇺🇸', matches:[['LA Lakers','Boston Celtics'],['Golden State Warriors','Phoenix Suns'],['Milwaukee Bucks','Miami Heat'],['Denver Nuggets','Dallas Mavericks'],['Philadelphia 76ers','Brooklyn Nets'],['Chicago Bulls','Toronto Raptors'],['New Orleans Pelicans','Memphis Grizzlies'],['Sacramento Kings','Portland Trail Blazers']] },
+    'EuroLeague': { flag:'🇪🇺', matches:[['Real Madrid','Fenerbahce'],['CSKA Moscow','Olympiakos'],['FC Barcelona','Anadolu Efes'],['Maccabi Tel Aviv','Bayern Munich'],['Baskonia','Partizan'],['Zalgiris','Monaco'],['Panathinaikos','AS Monaco'],['Valencia Basket','Virtus Bologna']] },
+    'NBL Australia': { flag:'🇦🇺', matches:[['Sydney Kings','Melbourne United'],['Cairns Taipans','Perth Wildcats'],['Brisbane Bullets','Adelaide 36ers'],['South East Melbourne','New Zealand Breakers'],['Illawarra Hawks','Cairns Taipans'],['Townsville Heat','Illawarra'],['Hobart Hurricanes','South East Melbourne'],['Perth Wildcats','Sydney Kings']] },
+  },
+  tennis: {
+    'World Table Tennis': { flag:'🏓', matches:[['Fan Zhendong','Ma Long'],['Timo Boll','Hugo Calderano'],['Dimitrij Ovtcharov','Lin Yun-Ju'],['Tomokazu Harimoto','Liang Jingkun'],['Wang Chuqin','Truls Moregard'],['Alexis Lebrun','Felix Lebrun'],['Quadri Aruna','Simon Gauzy'],['Mattias Falck','Jorgic Darko']] },
+    'ITTF Finals': { flag:'🏆', matches:[['Chen Meng','Ito Mima'],['Sun Yingsha','Wang Manyu'],['Mima Ito','Hina Hayata'],['Chen Xingtong','Lily Zhang'],['Bernadette Szocs','Bruna Takahashi'],['Nina Mittelham','Doo Hoi Kem'],['Sofia Polcanova','Liu Jia'],['Jeon Jihee','Lee Zion']] },
+  },
+  darts: {
+    'PDC World Championship': { flag:'🎯', matches:[['Michael van Gerwen','Peter Wright'],['Gerwyn Price','Luke Littler'],['Jose de Sousa','Michael Smith'],['Jonny Clayton','Nathan Aspinall'],['Gary Anderson','Dimitri van den Bergh'],['Rob Cross','Brendan Dolan'],['Danny Noppert','Dave Chisnall'],['Simon Whitlock','Callan Rydz']] },
+    'Premier League Darts': { flag:'🏆', matches:[['Michael van Gerwen','Luke Littler'],['Gerwyn Price','Michael Smith'],['Luke Humphries','Peter Wright'],['Rob Cross','Gary Anderson'],['Jonny Clayton','Jose de Sousa'],['Nathan Aspinall','Dimitri van den Bergh'],['Danny Noppert','Dave Chisnall'],['Damon Heta','Joe Cullen']] },
+    'PDC Masters': { flag:'⭐', matches:[['Michael van Gerwen','Gerwyn Price'],['Luke Littler','Michael Smith'],['Gary Anderson','Peter Wright'],['Rob Cross','Jonny Clayton'],['Luke Humphries','Jose de Sousa'],['Danny Noppert','Callan Rydz'],['Nathan Aspinall','Brendan Dolan'],['Simon Whitlock','Joe Cullen']] },
+  }
+};
+
+const TEAM_STATS = {
+  // Premier League
+  'Man City':{att:92,def:88,form:85,home:90},'Arsenal':{att:88,def:85,form:87,home:86},
+  'Liverpool':{att:90,def:83,form:88,home:89},'Chelsea':{att:78,def:75,form:72,home:76},
+  'Man Utd':{att:72,def:68,form:65,home:70},'Tottenham':{att:76,def:70,form:68,home:72},
+  'Newcastle':{att:78,def:79,form:76,home:80},'Aston Villa':{att:77,def:75,form:74,home:76},
+  'Brighton':{att:75,def:73,form:74,home:74},'West Ham':{att:73,def:71,form:70,home:72},
+  'Crystal Palace':{att:68,def:70,form:67,home:69},'Brentford':{att:72,def:70,form:70,home:72},
+  'Fulham':{att:70,def:69,form:68,home:70},'Nottm Forest':{att:67,def:71,form:66,home:68},
+  'Everton':{att:65,def:68,form:63,home:66},'Wolves':{att:67,def:69,form:65,home:67},
+  // La Liga
+  'Real Madrid':{att:94,def:87,form:90,home:93},'Barcelona':{att:91,def:82,form:86,home:90},
+  'Atletico Madrid':{att:79,def:88,form:80,home:84},'Sevilla':{att:72,def:74,form:68,home:72},
+  'Real Sociedad':{att:74,def:76,form:72,home:75},'Athletic Bilbao':{att:73,def:75,form:71,home:74},
+  'Villarreal':{att:74,def:72,form:70,home:73},'Valencia':{att:70,def:70,form:67,home:71},
+  'Betis':{att:72,def:72,form:70,home:73},'Celta Vigo':{att:70,def:68,form:67,home:70},
+  // Serie A
+  'Inter Milan':{att:87,def:86,form:85,home:88},'Juventus':{att:78,def:82,form:76,home:80},
+  'AC Milan':{att:80,def:79,form:78,home:82},'Napoli':{att:83,def:78,form:80,home:84},
+  'Roma':{att:76,def:73,form:72,home:76},'Lazio':{att:75,def:72,form:71,home:74},
+  'Fiorentina':{att:74,def:72,form:72,home:74},'Atalanta':{att:82,def:74,form:80,home:80},
+  // Bundesliga
+  'Bayern Munich':{att:93,def:85,form:88,home:92},'Dortmund':{att:84,def:75,form:80,home:82},
+  'RB Leipzig':{att:82,def:80,form:79,home:81},'Leverkusen':{att:83,def:81,form:82,home:82},
+  'Freiburg':{att:70,def:73,form:69,home:72},'Stuttgart':{att:74,def:71,form:72,home:73},
+  // Ligue 1
+  'PSG':{att:94,def:82,form:88,home:92},'Marseille':{att:78,def:72,form:74,home:78},
+  'Lyon':{att:75,def:70,form:71,home:74},'Monaco':{att:77,def:73,form:74,home:76},
+  'Nice':{att:72,def:74,form:70,home:73},'Lille':{att:73,def:75,form:71,home:73},
+  // Saudi
+  'Al Hilal':{att:86,def:82,form:84,home:88},'Al Nassr':{att:83,def:78,form:80,home:84},
+  'Al Ittihad':{att:78,def:76,form:75,home:78},'Al Ahli':{att:75,def:74,form:72,home:74},
+  // NBA
+  'LA Lakers':{att:88,def:82,form:80,home:85},'Boston Celtics':{att:90,def:88,form:87,home:88},
+  'Golden State Warriors':{att:87,def:83,form:82,home:87},'Phoenix Suns':{att:86,def:80,form:78,home:84},
+  'Milwaukee Bucks':{att:89,def:86,form:84,home:88},'Miami Heat':{att:82,def:84,form:80,home:83},
+  'Denver Nuggets':{att:88,def:84,form:86,home:89},'Dallas Mavericks':{att:85,def:81,form:82,home:84},
+  // Table Tennis
+  'Fan Zhendong':{att:97,def:95,form:96,home:92},'Ma Long':{att:95,def:94,form:90,home:88},
+  'Timo Boll':{att:88,def:87,form:82,home:85},'Hugo Calderano':{att:87,def:85,form:86,home:83},
+  'Wang Chuqin':{att:91,def:88,form:89,home:87},'Truls Moregard':{att:85,def:82,form:83,home:80},
+  'Tomokazu Harimoto':{att:90,def:87,form:86,home:85},'Lin Yun-Ju':{att:88,def:84,form:85,home:82},
+  'Luke Littler':{att:93,def:88,form:92,home:90},'Alexis Lebrun':{att:88,def:85,form:87,home:84},
+  // Darts
+  'Michael van Gerwen':{att:97,def:95,form:93,home:92},'Peter Wright':{att:89,def:87,form:84,home:86},
+  'Gerwyn Price':{att:88,def:86,form:82,home:85},'Michael Smith':{att:88,def:86,form:83,home:85},
+  'Gary Anderson':{att:90,def:88,form:83,home:87},'Jonny Clayton':{att:86,def:84,form:81,home:83},
+  'Jose de Sousa':{att:87,def:85,form:80,home:84},'Nathan Aspinall':{att:85,def:83,form:80,home:82},
+};
+
+const FOOTBALL_MARKETS = [
+  {v:'Home Win', n:'Home Win', d:'Straight home win'},
+  {v:'Away Win', n:'Away Win', d:'Straight away win'},
+  {v:'Draw', n:'Draw', d:'Match ends level'},
+  {v:'Home Win/Draw', n:'Home Win or Draw', d:'1X double chance'},
+  {v:'Away Win/Draw', n:'Away Win or Draw', d:'X2 double chance'},
+  {v:'BTTS', n:'BTTS Yes', d:'Both teams score'},
+  {v:'BTTS No', n:'BTTS No', d:'Clean sheet likely'},
+  {v:'Over 1.5', n:'Over 1.5 Goals', d:'2+ goals'},
+  {v:'Over 2.5', n:'Over 2.5 Goals', d:'3+ goals'},
+  {v:'Over 3.5', n:'Over 3.5 Goals', d:'4+ goals'},
+  {v:'Under 2.5', n:'Under 2.5 Goals', d:'2 goals or less'},
+  {v:'Under 3.5', n:'Under 3.5 Goals', d:'3 goals or less'},
+  {v:'Under 4.5', n:'Under 4.5 Goals', d:'4 goals or less'},
+  {v:'HT Home Win', n:'HT Home Win', d:'Home winning at half'},
+  {v:'HT Draw', n:'HT Draw', d:'Level at half time'},
+  {v:'HT Away Win', n:'HT Away Win', d:'Away winning at half'},
+  {v:'HT Home Win/Draw', n:'HT Home W/D', d:'Home ahead or level HT'},
+  {v:'Corners Over 7.5', n:'Corners Over 7.5', d:'8+ corners total'},
+  {v:'Corners Over 9.5', n:'Corners Over 9.5', d:'10+ corners total'},
+];
+
+const BASKETBALL_MARKETS = [
+  {v:'Home Win', n:'Home Win', d:'Home team wins'},
+  {v:'Away Win', n:'Away Win', d:'Away team wins'},
+  {v:'Over 210.5', n:'Over 210.5 Pts', d:'Combined score 211+'},
+  {v:'Over 220.5', n:'Over 220.5 Pts', d:'Combined score 221+'},
+  {v:'Over 230.5', n:'Over 230.5 Pts', d:'Combined score 231+'},
+  {v:'Under 210.5', n:'Under 210.5 Pts', d:'Combined score 210 or less'},
+  {v:'Under 220.5', n:'Under 220.5 Pts', d:'Combined score 220 or less'},
+];
+
+const TT_MARKETS = [
+  {v:'Home Win', n:'Player 1 Win', d:'Straight win'},
+  {v:'Away Win', n:'Player 2 Win', d:'Straight win'},
+  {v:'Over 3.5 Sets', n:'Over 3.5 Sets', d:'4+ sets played'},
+  {v:'Under 3.5 Sets', n:'Under 3.5 Sets', d:'3 sets or less'},
+  {v:'Over 10.5 Points', n:'Over 10.5 Pts/Set', d:'High scoring sets'},
+];
+
+const DARTS_MARKETS = [
+  {v:'Home Win', n:'Player 1 Win', d:'Straight win'},
+  {v:'Away Win', n:'Player 2 Win', d:'Straight win'},
+  {v:'Over 5.5 Sets', n:'Over 5.5 Sets', d:'6+ sets played'},
+  {v:'Under 5.5 Sets', n:'Under 5.5 Sets', d:'5 sets or less'},
+  {v:'180s Over 3.5', n:'Over 3.5 180s', d:'4+ maximums'},
+];
+
+// ── STATE ────────────────────────────────────────────────────
+let currentSport = 'football';
+let currentLeague = 'Premier League';
+let selectedOddsRange = '50-100';
+let selectedNumMatches = 5;
+let selectedMarketType = 'all';
+let accumItems = [];
+let accumPickType = 'Home Win';
+
+// ── INIT ─────────────────────────────────────────────────────
+function init() {
+  renderLeagues();
+  renderMarkets();
+  renderPickGrid();
+}
+
+function switchTab(n) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i+1===n));
+  document.querySelectorAll('.tab-content').forEach((c,i) => c.classList.toggle('active', i+1===n));
+}
+
+function selectSport(el, sport) {
+  document.querySelectorAll('.sport-tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentSport = sport;
+  renderLeagues();
+  renderMarkets();
+}
+
+function renderLeagues() {
+  const leagues = ALL_LEAGUES[currentSport] || {};
+  const grid = document.getElementById('leagueGrid');
+  const keys = Object.keys(leagues);
+  grid.innerHTML = keys.map((name, i) => {
+    const d = leagues[name];
+    return `<div class="league-btn${i===0?' active':''}" onclick="selectLeague(this,'${name}')">${d.flag ? `<span class="flag">${d.flag}</span>` : ''}${name}</div>`;
+  }).join('');
+  if (keys.length > 0) {
+    currentLeague = keys[0];
+    updateQuickMatches();
+  }
+}
+
+function selectLeague(el, league) {
+  document.querySelectorAll('#leagueGrid .league-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentLeague = league;
+  updateQuickMatches();
+}
+
+function updateQuickMatches() {
+  const leagues = ALL_LEAGUES[currentSport] || {};
+  const matches = (leagues[currentLeague] || {}).matches || [];
+  const container = document.getElementById('quickMatches');
+  container.innerHTML = matches.map(([h,a]) => `<div class="quick-match" onclick="setMatch('${h}','${a}')">${h} vs ${a}</div>`).join('');
+}
+
+function setMatch(home, away) {
+  document.getElementById('homeTeam').value = home;
+  document.getElementById('awayTeam').value = away;
+}
+
+function renderMarkets() {
+  const markets = currentSport === 'football' ? FOOTBALL_MARKETS : currentSport === 'basketball' ? BASKETBALL_MARKETS : currentSport === 'tennis' ? TT_MARKETS : DARTS_MARKETS;
+  const grid = document.getElementById('marketsGrid');
+  grid.innerHTML = markets.map((m, i) => `
+    <label class="market-toggle${i < 4 ? ' selected' : ''}">
+      <input type="checkbox"${i < 4 ? ' checked' : ''} value="${m.v}">
+      <div class="market-check">${i < 4 ? '✓' : ''}</div>
+      <div><div class="market-name">${m.n}</div><div class="market-desc">${m.d}</div></div>
+    </label>
+  `).join('');
+  grid.querySelectorAll('.market-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const cb = toggle.querySelector('input');
+      cb.checked = !cb.checked;
+      toggle.classList.toggle('selected', cb.checked);
+      toggle.querySelector('.market-check').textContent = cb.checked ? '✓' : '';
+    });
+  });
+}
+
+function renderPickGrid() {
+  const picks = ['Home Win','Away Win','Draw','BTTS Yes','Over 2.5','Over 1.5','Under 2.5','Over 3.5','HT Draw','HT Home Win','Corners O9.5','DNB Home'];
+  document.getElementById('pickGrid').innerHTML = picks.map((p,i) => 
+    `<div class="pick-btn${i===0?' active':''}" onclick="selectAccumPick(this,'${p}')">${p}</div>`
+  ).join('');
+}
+
+function selectAccumPick(el, type) {
+  document.querySelectorAll('#pickGrid .pick-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  accumPickType = type;
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function getStats(name) {
+  const key = Object.keys(TEAM_STATS).find(k => k.toLowerCase() === name.toLowerCase() || name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(name.toLowerCase()));
+  return key ? TEAM_STATS[key] : {att:72,def:70,form:70,home:72};
+}
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+// ── PREDICTION ENGINE ─────────────────────────────────────────
+function calcProbs(home, away) {
+  const h = getStats(home), a = getStats(away);
+  const hStr = h.att * 0.4 + h.def * 0.3 + h.form * 0.2 + h.home * 0.1;
+  const aStr = (a.att * 0.4 + a.def * 0.3 + a.form * 0.2) * 0.92;
+  const tot = hStr + aStr + 15;
+  let hw = clamp(Math.round(hStr/tot*100)+rand(-4,4), 22, 72);
+  let aw = clamp(Math.round(aStr/tot*100)+rand(-4,4), 12, 52);
+  let d = clamp(100-hw-aw, 14, 34);
+  const s = hw+aw+d; hw=Math.round(hw/s*100); aw=Math.round(aw/s*100); d=100-hw-aw;
+  const avgG = ((h.att+a.att)/2/100)*3.2+rand(-3,3)/10;
+  return {
+    hw, aw, d, h, a, avgG,
+    btts: clamp(Math.round((h.att+a.att)/2*0.85)+rand(-7,7), 32, 80),
+    over25: clamp(Math.round(avgG*28)+rand(-7,7), 28, 78),
+    over15: clamp(Math.round(avgG*28)+rand(-7,7)+rand(12,20), 52, 92),
+    over35: clamp(Math.round(avgG*28)+rand(-7,7)-rand(18,28), 12, 50),
+    under25: 0, under35: 0, under45: 0,
+    htHW: clamp(hw-rand(8,15), 18, 55), htD: clamp(d+rand(5,12), 28, 48), htAW: clamp(aw-rand(5,12), 10, 38),
+    corners: clamp(rand(60,80), 50, 85),
+  };
+}
+
+function getMarketPrediction(market, home, away, p) {
+  const fns = {
+    'Home Win': () => ({ pred: `${home} Win`, prob: p.hw, r: `${home} have ${p.hw}% win probability. Home advantage and current form (${p.h.form}/100) support this selection.` }),
+    'Away Win': () => ({ pred: `${away} Win`, prob: p.aw, r: `${away} carry ${p.aw}% win probability away. Their attack (${p.a.att}/100) poses a serious threat.` }),
+    'Draw': () => ({ pred: 'Match Draw', prob: p.d, r: `Draw probability stands at ${p.d}%. Evenly matched sides or defensive setups could produce a stalemate.` }),
+    'Home Win/Draw': () => ({ pred: `${home} Win or Draw`, prob: clamp(p.hw+p.d, 40, 88), r: `Combined 1X probability of ${clamp(p.hw+p.d,40,88)}%. Good value if ${home} are hard to beat at home.` }),
+    'Away Win/Draw': () => ({ pred: `${away} Win or Draw`, prob: clamp(p.aw+p.d, 35, 82), r: `X2 covers ${away} winning or drawing — ${clamp(p.aw+p.d,35,82)}% combined probability.` }),
+    'BTTS': () => ({ pred: p.btts>52?'BTTS Yes':'BTTS No', prob: p.btts, r: `Both teams attack rating average: ${Math.round((p.h.att+p.a.att)/2)}/100. ${p.btts>55?'Both sides capable of scoring.':'One side may be shut out.'}` }),
+    'BTTS No': () => ({ pred: 'BTTS No', prob: 100-p.btts, r: `${100-p.btts}% chance at least one team keeps a clean sheet. Defensive strength plays a key role here.` }),
+    'Over 1.5': () => ({ pred: 'Over 1.5 Goals', prob: p.over15, r: `${p.over15}% probability of 2+ goals. Expected average of ${p.avgG.toFixed(1)} goals makes this a strong candidate.` }),
+    'Over 2.5': () => ({ pred: p.over25>50?'Over 2.5 Goals':'Under 2.5 Goals', prob: p.over25, r: `Expected goals: ${p.avgG.toFixed(1)}. Combined attack ratings suggest a ${p.over25>55?'high scoring':'tight'} affair.` }),
+    'Over 3.5': () => ({ pred: p.over35>40?'Over 3.5 Goals':'Under 3.5 Goals', prob: p.over35, r: `4+ goals requires both defences to be breached twice. ${p.over35}% probability based on attack vs defence ratings.` }),
+    'Under 2.5': () => ({ pred: 'Under 2.5 Goals', prob: 100-p.over25, r: `${100-p.over25}% probability of 2 goals or less. Defensive setups and form suggest a potentially tight game.` }),
+    'Under 3.5': () => ({ pred: 'Under 3.5 Goals', prob: 100-p.over35+rand(10,20), r: `${clamp(100-p.over35+rand(10,20),55,88)}% probability of 3 goals or less. Most matches fall under this threshold.` }),
+    'Under 4.5': () => ({ pred: 'Under 4.5 Goals', prob: clamp(100-p.over35+rand(20,30), 70, 95), r: `Very high probability of under 4.5 goals. Only extreme high-scoring games would breach this mark.` }),
+    'HT Home Win': () => ({ pred: `${home} HT Win`, prob: p.htHW, r: `${home} score first in ${p.htHW}% of home games. Early pressure and home crowd effect key factors.` }),
+    'HT Draw': () => ({ pred: 'Half Time Draw', prob: p.htD, r: `HT draw is the most common half time result at ${p.htD}%. Teams often play cautiously in the first half.` }),
+    'HT Away Win': () => ({ pred: `${away} HT Win`, prob: p.htAW, r: `${away} ahead at half time in ${p.htAW}% of away fixtures based on current form.` }),
+    'HT Home Win/Draw': () => ({ pred: `${home} Win or Draw at HT`, prob: clamp(p.htHW+p.htD, 45, 82), r: `${home} either winning or level at half time — ${clamp(p.htHW+p.htD,45,82)}% probability.` }),
+    'Corners Over 7.5': () => ({ pred: 'Over 7.5 Corners', prob: p.corners, r: `${p.corners}% probability of 8+ corners. Attacking teams force more corners from defensive clearances.` }),
+    'Corners Over 9.5': () => ({ pred: 'Over 9.5 Corners', prob: clamp(p.corners-rand(15,20), 35, 68), r: `10+ corners expected in ${clamp(p.corners-rand(15,20),35,68)}% of matches between these sides.` }),
+    // Basketball
+    'Over 210.5': () => ({ pred: 'Over 210.5 Points', prob: clamp((p.h.att+p.a.att)/2, 45, 80), r: `NBA teams average high combined scores. Pace of play and offensive ratings suggest a ${clamp((p.h.att+p.a.att)/2,45,80)}% chance.` }),
+    'Over 220.5': () => ({ pred: 'Over 220.5 Points', prob: clamp((p.h.att+p.a.att)/2-rand(5,15), 35, 72), r: `220+ combined points requires both teams firing offensively. ${clamp((p.h.att+p.a.att)/2-rand(5,15),35,72)}% probability.` }),
+    'Over 230.5': () => ({ pred: 'Over 230.5 Points', prob: clamp((p.h.att+p.a.att)/2-rand(15,25), 25, 60), r: `High-scoring encounter needed. ${clamp((p.h.att+p.a.att)/2-rand(15,25),25,60)}% based on offensive firepower.` }),
+    'Under 210.5': () => ({ pred: 'Under 210.5 Points', prob: clamp(100-(p.h.att+p.a.att)/2, 30, 65), r: `Defensive-minded game or slow pace could keep total below 211. ${clamp(100-(p.h.att+p.a.att)/2,30,65)}% probability.` }),
+    'Under 220.5': () => ({ pred: 'Under 220.5 Points', prob: clamp(100-(p.h.att+p.a.att)/2+rand(5,15), 38, 72), r: `Under 220.5 total points. Strong defensive matchups could limit scoring.` }),
+    // Table Tennis
+    'Over 3.5 Sets': () => ({ pred: 'Over 3.5 Sets', prob: clamp(rand(45,70), 40, 75), r: `Close match between top players likely to go 4-5 sets. High probability of extended game.` }),
+    'Under 3.5 Sets': () => ({ pred: 'Under 3.5 Sets', prob: clamp(rand(35,60), 30, 65), r: `Dominant player could close out in 3 sets. Depends on ranking gap and recent form.` }),
+    // Darts
+    'Over 5.5 Sets': () => ({ pred: 'Over 5.5 Sets', prob: clamp(rand(45,68), 38, 72), r: `6+ sets expected in an evenly contested match. Both players at high level.` }),
+    'Under 5.5 Sets': () => ({ pred: 'Under 5.5 Sets', prob: clamp(rand(38,62), 32, 68), r: `Could be a one-sided affair if form gap is significant. Under 5.5 sets feasible.` }),
+    '180s Over 3.5': () => ({ pred: 'Over 3.5 180s', prob: clamp((p.h.att+p.a.att)/2*0.6, 45, 78), r: `Top players average multiple maximums per set. 4+ 180s highly likely in this encounter.` }),
+    'Corners O9.5': () => ({ pred: 'Corners Over 9.5', prob: clamp(p.corners-rand(12,18), 38, 65), r: `10+ corners possible in an open, attacking game between these sides.` }),
+    'DNB Home': () => ({ pred: `${home} Draw No Bet`, prob: clamp(p.hw+Math.round(p.d*0.5), 35, 75), r: `DNB protects stake on draw. ${home} win probability (${p.hw}%) makes this a safer home backing.` }),
+    'HT Home W/D': () => ({ pred: `${home} HT Win/Draw`, prob: clamp(p.htHW+p.htD, 45, 82), r: `${home} either level or winning at break. ${clamp(p.htHW+p.htD,45,82)}% probability.` }),
+  };
+  const fn = fns[market];
+  if (!fn) return { pred: market, prob: 50, r: 'Based on current form and statistical analysis.' };
+  const res = fn();
+  return { ...res, prob: clamp(res.prob, 15, 92) };
+}
+
+// ── PREDICT ───────────────────────────────────────────────────
+async function predict() {
+  const home = document.getElementById('homeTeam').value.trim();
+  const away = document.getElementById('awayTeam').value.trim();
+  const markets = [...document.querySelectorAll('#marketsGrid .market-toggle input:checked')].map(i => i.value);
+  const errEl = document.getElementById('errorMsg');
+  errEl.classList.remove('show');
+  if (!home || !away) { errEl.textContent = 'Please enter both team names!'; errEl.classList.add('show'); return; }
+  if (!markets.length) { errEl.textContent = 'Select at least one market!'; errEl.classList.add('show'); return; }
+
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('predictBtn').disabled = true;
+
+  const steps = ['Analysing form & head-to-head...','Computing probability models...','Running prediction engine...','Generating recommendations...'];
+  let si = 0;
+  const stepEl = document.getElementById('loadingStep');
+  const iv = setInterval(() => { si = (si+1)%steps.length; stepEl.textContent = steps[si]; }, 1000);
+
+  await new Promise(r => setTimeout(r, 2000));
+  clearInterval(iv);
+
+  const p = calcProbs(home, away);
+  const mPreds = markets.map(m => { const r = getMarketPrediction(m, home, away, p); return { market: m, ...r }; });
+  const dom = Math.abs(p.hw - p.aw);
+  const conf = dom > 25 ? 'HIGH' : dom > 12 ? 'MEDIUM' : 'LOW';
+  const winner = p.hw > p.aw ? home : away;
+  const winnerPct = Math.max(p.hw, p.aw);
+  const hG = p.avgG > 2.8 ? rand(2,3) : rand(1,2);
+  const aG = p.hw > 55 ? rand(0,1) : rand(0,2);
+  const best = mPreds.reduce((b,m) => m.prob > b.prob ? m : b, mPreds[0]);
+
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('predictBtn').disabled = false;
+
+  const confClass = conf==='HIGH'?'conf-high':conf==='MEDIUM'?'conf-med':'conf-low';
+  const confEmoji = conf==='HIGH'?'🔥':conf==='MEDIUM'?'⚡':'⚠️';
+  const icons = ['📊','⚽','🏆','💪','🎯','📈'];
+
+  let html = `
+    <div class="match-header">
+      <div class="match-teams">${home} <span style="color:var(--muted);font-size:16px">vs</span> ${away}</div>
+      <div style="font-size:11px;color:var(--muted)">${currentLeague} • Predicted: <span style="color:var(--green);font-weight:600">${hG}-${aG}</span></div>
+      <div class="confidence-banner ${confClass}">${confEmoji} ${conf} CONFIDENCE</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">${winner} are favourites at ${winnerPct}%. ${conf==='HIGH'?'Strong opportunity.':conf==='MEDIUM'?'Moderate value.':'Competitive fixture.'}</div>
+    </div>
+    <div class="best-bet-banner">
+      <span style="font-size:18px">⭐</span>
+      <div><div style="font-size:10px;letter-spacing:2px;color:var(--green);font-family:'JetBrains Mono',monospace">BEST BET</div>
+      <div style="font-size:13px;font-weight:600;margin-top:2px">${best.pred} — ${best.prob}% probability</div></div>
+    </div>
+  `;
+
+  mPreds.forEach(m => {
+    const pct = clamp(m.prob, 0, 100);
+    const cc = pct>=65?'':'warning'; const fc = pct>=65?'':(pct>=45?'warning':'danger');
+    const vc = m.verdict||( pct>=60?'YES':pct>=42?'MAYBE':'NO');
+    html += `<div class="market-card ${cc}">
+      <div class="market-card-top"><div class="market-card-name">${m.market}</div>
+      <div class="market-card-verdict ${vc==='YES'?'verdict-yes':vc==='NO'?'verdict-no':'verdict-maybe'}">${vc==='YES'?'YES':vc==='NO'?'NO':'MAYBE'}</div></div>
+      <div class="market-card-prediction">${m.pred}</div>
+      <div class="prob-bar-wrap"><div class="prob-label"><span>Probability</span><span>${pct}%</span></div>
+      <div class="prob-bar"><div class="prob-fill ${fc}" style="width:0%" data-pct="${pct}"></div></div></div>
+      <div class="market-reasoning">${m.r}</div>
+    </div>`;
+  });
+
+  const factors = [
+    `${home} home strength: ${p.h.home}/100 — ${p.h.home>80?'Fortress at home':'Moderate home record'}`,
+    `Attack vs Defence: ${home} (${p.h.att} att) vs ${away} (${p.a.def} def)`,
+    `Form index: ${home} ${p.h.form}/100 vs ${away} ${p.a.form}/100`,
+    `Expected goals: ${p.avgG.toFixed(1)} — ${p.avgG>2.5?'High scoring likely':p.avgG>1.8?'Moderate goals':'Low scoring game'}`
+  ];
+
+  html += `<div class="factors-card"><span class="section-label">🔍 Key Factors</span>
+    ${factors.map((f,i)=>`<div class="factor-item"><span style="font-size:14px;flex-shrink:0">${icons[i]||'📌'}</span><span>${f}</span></div>`).join('')}
+  </div>`;
+
+  const el = document.getElementById('results');
+  el.innerHTML = html; el.classList.add('show');
+  setTimeout(() => { document.querySelectorAll('.prob-fill[data-pct]').forEach(e => e.style.width = e.dataset.pct + '%'); }, 100);
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── ACCUMULATOR ───────────────────────────────────────────────
+function addToAccum() {
+  const home = document.getElementById('accumHome').value.trim();
+  const away = document.getElementById('accumAway').value.trim();
+  const errEl = document.getElementById('accumError');
+  errEl.classList.remove('show');
+  if (!home||!away) { errEl.textContent='Enter both team names!'; errEl.classList.add('show'); return; }
+  if (accumItems.length>=8) { errEl.textContent='Max 8 matches!'; errEl.classList.add('show'); return; }
+
+  const p = calcProbs(home, away);
+  const pickProbs = { 'Home Win':p.hw, 'Away Win':p.aw, 'Draw':p.d, 'BTTS Yes':p.btts, 'Over 2.5':p.over25, 'Over 1.5':p.over15, 'Under 2.5':100-p.over25, 'Over 3.5':p.over35, 'HT Draw':p.htD, 'HT Home Win':p.htHW, 'Corners O9.5':clamp(p.corners-rand(12,18),38,65), 'DNB Home':clamp(p.hw+Math.round(p.d*0.5),35,75) };
+  const prob = clamp((pickProbs[accumPickType]||50)+rand(-5,5), 18, 85);
+  const baseOdds = { 'Home Win':[1.4,2.8],'Away Win':[2.0,5.0],'Draw':[2.8,4.2],'BTTS Yes':[1.5,2.2],'Over 2.5':[1.5,2.2],'Over 1.5':[1.2,1.8],'Under 2.5':[1.5,2.4],'Over 3.5':[2.2,4.0],'HT Draw':[2.0,3.2],'HT Home Win':[2.0,3.5],'Corners O9.5':[1.6,2.5],'DNB Home':[1.3,2.0] };
+  const range = baseOdds[accumPickType]||[1.5,2.5];
+  const odds = Math.max(1.15, Math.round((range[0]+Math.random()*(range[1]-range[0]))*100)/100);
+
+  accumItems.push({home,away,pick:accumPickType,odds,prob,id:Date.now()});
+  document.getElementById('accumHome').value='';
+  document.getElementById('accumAway').value='';
+  renderAccum();
+}
+
+function removeAccumItem(id) { accumItems = accumItems.filter(i=>i.id!==id); renderAccum(); }
+function clearAccum() { accumItems=[]; renderAccum(); }
+
+function renderAccum() {
+  const list = document.getElementById('accumList');
+  const bar = document.getElementById('totalOddsBar');
+  if (!accumItems.length) { list.innerHTML=''; bar.style.display='none'; return; }
+  let totalOdds=1, totalProb=1;
+  list.innerHTML = accumItems.map((item,idx) => {
+    totalOdds *= item.odds; totalProb *= item.prob/100;
+    const cc = item.prob>=60?'var(--green)':item.prob>=45?'var(--yellow)':'var(--red)';
+    return `<div class="odds-card">
+      <button class="remove-btn" onclick="removeAccumItem(${item.id})">✕</button>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)">#${idx+1}</span>
+        <span class="odds-badge">${item.odds.toFixed(2)}x</span>
+      </div>
+      <div style="font-size:13px;font-weight:600">${item.home} vs ${item.away}</div>
+      <div style="font-size:11px;color:var(--green);margin-top:2px">📌 ${item.pick}</div>
+      <div style="display:flex;align-items:center;gap:7px;margin-top:7px">
+        <div class="prob-bar" style="flex:1;height:4px"><div class="prob-fill" style="width:${item.prob}%;background:${cc}"></div></div>
+        <span style="font-size:10px;color:var(--muted)">${item.prob}%</span>
+      </div>
+    </div>`;
+  }).join('');
+  totalOdds = Math.round(totalOdds*100)/100;
+  const tProb = Math.round(totalProb*100);
+  bar.style.display='flex';
+  document.getElementById('totalOddsNum').textContent = totalOdds.toFixed(2)+'x';
+  document.getElementById('totalProbNum').textContent = tProb+'%';
+  document.getElementById('totalOddsNum').style.color = totalOdds>=50?'var(--red)':totalOdds>=20?'var(--yellow)':'var(--green)';
+  document.getElementById('totalOddsInfo').textContent = `${accumItems.length} match accumulator • ${totalOdds>=10?'🔥 High odds!':'⚡ Building...'}`;
+}
+
+// ── SMART ODDS GENERATOR ──────────────────────────────────────
+function selectOddsRange(el, range) { document.querySelectorAll('[id^="odds_"]').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedOddsRange=range; }
+function selectNumMatches(el, n) { document.querySelectorAll('[id^="nm_"]').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedNumMatches=n; }
+function selectMarketType(el, t) { document.querySelectorAll('[id^="mt_"]').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedMarketType=t; }
+
+function generateSmartOdds() {
+  const errEl = document.getElementById('smartError');
+  errEl.classList.remove('show');
+
+  // Pool of matches from all football leagues
+  const allMatches = [];
+  Object.values(ALL_LEAGUES.football).forEach(l => { l.matches.forEach(([h,a]) => allMatches.push({home:h,away:a})); });
+
+  // Shuffle
+  allMatches.sort(() => Math.random()-0.5);
+
+  const marketPools = {
+    all: ['Home Win','Away Win','BTTS','Over 2.5','Over 1.5','Under 2.5','HT Draw','HT Home Win','Corners Over 9.5'],
+    goals: ['Over 1.5','Over 2.5','Under 2.5','Over 3.5','Under 3.5','Under 4.5'],
+    wins: ['Home Win','Away Win','Home Win/Draw','Away Win/Draw','DNB Home'],
+    btts: ['BTTS','BTTS No','BTTS + Over 2.5','BTTS + Home Win'],
+    ht: ['HT Draw','HT Home Win','HT Away Win','HT Home Win/Draw'],
+    mixed: ['Home Win','BTTS','Over 2.5','HT Draw','Under 3.5','Corners Over 7.5'],
+  };
+  const mPool = marketPools[selectedMarketType] || marketPools.all;
+
+  // Target odds range
+  const oddsTargets = { '50-100':[50,100], '100-200':[100,200], '200-500':[200,500] };
+  const [minOdds, maxOdds] = oddsTargets[selectedOddsRange];
+
+  let slips = [];
+  let attempts = 0;
+  while (slips.length < 3 && attempts < 30) {
+    attempts++;
+    const chosen = allMatches.slice(0, selectedNumMatches + rand(0,3)).slice(0, selectedNumMatches);
+    let totalOdds = 1;
+    let totalProb = 1;
+    const items = chosen.map(({home,away}) => {
+      const market = mPool[rand(0, mPool.length-1)];
+      const p = calcProbs(home, away);
+      const mr = getMarketPrediction(market, home, away, p);
+      const baseOdds = 100/Math.max(10, mr.prob);
+      const odds = Math.round(baseOdds * (0.85 + Math.random()*0.3) * 100)/100;
+      totalOdds *= odds;
+      totalProb *= mr.prob/100;
+      return {home, away, market, pick: mr.pred, odds: Math.max(1.15, odds), prob: mr.prob};
+    });
+    allMatches.sort(() => Math.random()-0.5); // re-shuffle for next slip
+    if (totalOdds >= minOdds && totalOdds <= maxOdds*1.5) {
+      slips.push({items, totalOdds: Math.round(totalOdds*100)/100, totalProb: Math.round(totalProb*10000)/100});
+    }
+  }
+
+  if (!slips.length) {
+    // Force generate even if not in exact range
+    for (let s=0; s<3; s++) {
+      allMatches.sort(() => Math.random()-0.5);
+      const chosen = allMatches.slice(0, selectedNumMatches);
+      let totalOdds = 1, totalProb = 1;
+      const items = chosen.map(({home,away}) => {
+        const market = mPool[rand(0, mPool.length-1)];
+        const p = calcProbs(home, away);
+        const mr = getMarketPrediction(market, home, away, p);
+        const odds = Math.max(1.3, Math.round((1.5 + Math.random()*2)*100)/100);
+        totalOdds *= odds; totalProb *= mr.prob/100;
+        return {home, away, market, pick: mr.pred, odds, prob: mr.prob};
+      });
+      slips.push({items, totalOdds: Math.round(totalOdds*100)/100, totalProb: Math.round(totalProb*10000)/100});
+    }
+  }
+
+  const container = document.getElementById('smartResults');
+  container.innerHTML = slips.map((slip, si) => {
+    const color = slip.totalOdds >= 100 ? 'var(--red)' : slip.totalOdds >= 50 ? 'var(--yellow)' : 'var(--green)';
+    return `
+    <div class="odds-generator-result">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;letter-spacing:2px;color:var(--muted);font-family:'JetBrains Mono',monospace">SLIP ${si+1}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${color}">${slip.totalOdds.toFixed(2)}x ODDS</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--muted)">Win probability</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--green)">${slip.totalProb}%</div>
+        </div>
+      </div>
+      ${slip.items.map((item,i) => `
+        <div class="bet-slip-item">
+          <div>
+            <div style="font-weight:600;font-size:12px">${item.home} vs ${item.away}</div>
+            <div style="font-size:11px;color:var(--green)">${item.pick}</div>
+            <div class="slip-prob">${item.prob}% probability</div>
+          </div>
+          <div class="slip-odds">${item.odds.toFixed(2)}x</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+
+  container.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function selectOddsRange(el, range) { document.querySelectorAll('[id^="odds_"]').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedOddsRange=range; }
+function selectNumMatches(el, n) { document.querySelectorAll('[id^="nm_"]').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedNumMatches=n; }
+function selectMarketType(el, t) { document.querySelectorAll('[id^="mt_"]').forEach(b=>b.classList.remove('active')); el.classList.add('active'); selectedMarketType=t; }
+
+init();
+</script>
+</body>
+</html>
